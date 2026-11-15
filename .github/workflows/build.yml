@@ -1,0 +1,65 @@
+name: Build Magisk/KSU Module v1.0.0
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate customize.sh, Preview UI, Package ZIP & Build update.json
+        run: |
+          python3 tools/build_ui.py --preview --no-sleep --pack --update-json
+
+      - name: Validate narrow-screen line limits (<= 58 chars)
+        run: |
+          python3 -c '
+          import re
+          with open("customize.sh", encoding="utf-8") as f:
+              for idx, line in enumerate(f, 1):
+                  m = re.search(r"ui_print \"(.*)\"", line)
+                  if m and "$" not in m.group(1):
+                      assert len(m.group(1)) <= 58, f"Line {idx} too wide ({len(m.group(1))} chars): {m.group(1)}"
+          print("[✓] All static ui_print lines passed narrow-screen check!")
+          '
+
+      - name: Upload Module ZIP & update.json Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flashable-module
+          path: |
+            dist/*.zip
+            update.json
+
+      - name: Auto-Commit update.json on Release Tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add update.json
+          git diff --staged --quiet || git commit -m "chore: update update.json for ${{ github.ref_name }} [skip ci]"
+          git push origin HEAD:main || true
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          body_path: CHANGELOG.md

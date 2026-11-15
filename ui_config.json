@@ -1,0 +1,33 @@
+{
+  "banner_title": "SASORI",
+  "banner_subtitle": "MODULE EDITION",
+  "stage_sleep": 0.3,
+  "skipmount": false,
+  "propfile": false,
+  "postfsdata": false,
+  "latestartservice": false,
+  "volume_menu": {
+    "enabled": true,
+    "prompt": "Select Installation Profile:",
+    "vol_up_label": "Performance Mode",
+    "vol_down_label": "Balanced / Battery Mode",
+    "timeout": 10
+  },
+  "stages": [
+    {
+      "label": "Extracting system overlays...",
+      "percent": 35,
+      "cmd": "# Add custom extraction commands here"
+    },
+    {
+      "label": "Applying module configurations...",
+      "percent": 70,
+      "cmd": "if [ \"$SELECTED_PROFILE\" = \"Performance Mode\" ]; then\n  ui_print \"    -> Applying high-performance tweaks\"\nfi"
+    },
+    {
+      "label": "Setting default permissions...",
+      "percent": 100,
+      "cmd": "set_perm_recursive \"$MODPATH\" 0 0 0755 0644"
+    }
+  ]
+}

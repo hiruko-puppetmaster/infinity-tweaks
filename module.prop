@@ -1,0 +1,7 @@
+id=sasori_arttt
+name=Infinity Tweaks
+version=v1.0.0
+versionCode=100
+author=YourName
+description=Custom system optimizations with Infinity X style installer UI.
+updateJson=https://raw.githubusercontent.com/hiruko-puppetmaster/Customize.sh-Ui-Builder/main/update.json

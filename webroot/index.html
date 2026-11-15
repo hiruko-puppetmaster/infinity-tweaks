@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Module Dashboard</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #181b22;
+      --accent: #4f8cff;
+      --text: #eef1f7;
+      --muted: #9aa3b2;
+    }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { margin: 0; padding: 20px; background: var(--bg); color: var(--text); }
+    .header { margin-bottom: 20px; }
+    .header h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.5px; }
+    .header p { margin: 4px 0 0; color: var(--muted); font-size: 0.85rem; }
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .row { display: flex; justify-content: space-between; align-items: center; }
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn:active { opacity: 0.85; }
+    pre {
+      background: #0b0d10;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      color: #7ee787;
+      overflow-x: auto;
+      margin: 10px 0 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Infinity Tweaks WebUI</h1>
+    <p>KernelSU / APatch / MMRL WebUI X Interface</p>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <strong>Active Profile</strong>
+        <div id="statusText" style="color: var(--muted); font-size: 0.85rem;">Checking...</div>
+      </div>
+      <button class="btn" onclick="toggleProfile()">Switch Mode</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <strong>Device Shell Output</strong>
+    <pre id="consoleLog">Ready.</pre>
+  </div>
+
+  <script>
+    const MODDIR = "/data/adb/modules/sasori_arttt";
+
+    function execShell(cmd) {
+      return new Promise((resolve) => {
+        if (typeof ksu !== "undefined" && ksu.exec) {
+          const cb = "cb_" + Date.now();
+          window[cb] = (errno, stdout, stderr) => {
+            delete window[cb];
+            resolve({ errno, stdout: stdout || "", stderr: stderr || "" });
+          };
+          ksu.exec(cmd, "{}", cb);
+        } else {
+          resolve({ errno: 0, stdout: "[Preview Mode] Executed: " + cmd, stderr: "" });
+        }
+      });
+    }
+
+    async function refreshStatus() {
+      const res = await execShell(`cat ${MODDIR}/.profile_state 2>/dev/null || echo Balanced`);
+      document.getElementById("statusText").textContent = res.stdout.trim() + " Mode";
+    }
+
+    async function toggleProfile() {
+      const res = await execShell(`sh ${MODDIR}/action.sh`);
+      document.getElementById("consoleLog").textContent = res.stdout.trim() || res.stderr.trim();
+      refreshStatus();
+    }
+
+    refreshStatus();
+  </script>
+</body>
+</html>
